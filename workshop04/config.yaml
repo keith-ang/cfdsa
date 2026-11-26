@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rustfsns
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rustfs-cm
+  namespace: rustfsns
+data:
+  RUSTFS_ADDRESS: "0.0.0.0:9000"
+  RUSTFS_CONSOLE_ENABLE: "true"
+  RUSTFS_CONSOLE_ADDRESS: "0.0.0.0:9001"
+  RUSTFS_VOLUMES: "http://rustfs-sts-{0...2}.rustfs-headless.rustfsns.svc.cluster.local:9000/data"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rustfs-secret
+  namespace: rustfsns
+type: Opaque
+stringData:
+  RUSTFS_ACCESS_KEY: "admin"
+  RUSTFS_SECRET_KEY: "adminadmin1234"

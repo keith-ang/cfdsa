@@ -1,0 +1,43 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: rustfs-data
+  namespace: rustfsns
+spec:
+  parentRefs:
+    - name: default-gtw
+      namespace: default
+      port: 80
+  hostnames:
+    - data.172.25.0.4.nip.io
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: rustfs-s3
+          port: 9000
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: rustfs-console
+  namespace: rustfsns
+spec:
+  parentRefs:
+    - name: default-gtw
+      namespace: default
+      port: 80
+  hostnames:
+    - console.172.25.0.4.nip.io
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: rustfs-console
+          port: 9001

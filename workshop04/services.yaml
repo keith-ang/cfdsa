@@ -1,0 +1,51 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rustfs-headless
+  namespace: rustfsns
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app: rustfs
+    env: dev
+  ports:
+    - name: api-port
+      port: 9000
+      targetPort: api-port
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rustfs-s3
+  namespace: rustfsns
+spec:
+  type: ClusterIP
+  selector:
+    app: rustfs
+    env: dev
+  ports:
+    - name: api-port
+      port: 9000
+      targetPort: api-port
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rustfs-console
+  namespace: rustfsns
+spec:
+  type: ClusterIP
+  selector:
+    app: rustfs
+    env: dev
+  ports:
+    - name: console-port
+      port: 9001
+      targetPort: console-port
+      protocol: TCP

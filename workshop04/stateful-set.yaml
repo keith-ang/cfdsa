@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rustfs-sts
+  namespace: rustfsns
+spec:
+  serviceName: rustfs-headless
+  replicas: 3
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: rustfs
+      env: dev
+  template:
+    metadata:
+      labels:
+        app: rustfs
+        env: dev
+    spec:
+      securityContext:
+        fsGroup: 10001
+      containers:
+        - name: rustfs-container
+          image: rustfs/rustfs:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: rustfs-cm
+            - secretRef:
+                name: rustfs-secret
+          ports:
+            - name: api-port
+              containerPort: 9000
+              protocol: TCP
+            - name: console-port
+              containerPort: 9001
+              protocol: TCP
+          volumeMounts:
+            - name: data-vol
+              mountPath: /data
+          readinessProbe:
+            tcpSocket:
+              port: api-port
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: api-port
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              memory: 250Mi
+              cpu: 200m
+  volumeClaimTemplates:
+    - metadata:
+        name: data-vol
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
