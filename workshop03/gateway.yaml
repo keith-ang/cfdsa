@@ -1,0 +1,43 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: umamiapp-httproute
+  namespace: umamins
+spec:
+  hostnames:
+  - umami.172.25.0.4.nip.io 
+  parentRefs:
+    - name: default-gtw
+      namespace: default
+      port: 80
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+      - name: umamiapp-svc
+        namespace: umamins
+        port: 3000
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: umamiapp-hpa
+  namespace: umamins
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: umamiapp-deploy
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80

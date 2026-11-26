@@ -1,0 +1,75 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: umamiapp-deploy
+  namespace: umamins
+spec:
+  # replicas: 1
+  selector:
+    matchLabels:
+      app: umamiapp
+      env: dev
+  template: 
+    metadata:
+      name: umamiapp
+      namespace: umamins
+      labels:
+        app: umamiapp
+        env: dev
+    spec:
+      containers:
+      - name: umamiapp-container
+        image: ghcr.io/umami-software/umami:latest
+        envFrom:
+        - configMapRef:
+            name: umamidb-cm
+        - secretRef:
+            name: umamidb-secret
+        - secretRef:
+            name: umamiapp-secret
+        env:
+        - name: DATABASE_URL
+          value: postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@umamidb-svc.umamins.svc.cluster.local:5432/$(POSTGRES_DB)
+        ports:
+        - name: umamiapp-port
+          containerPort: 3000
+
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 256m
+          limits:
+            memory: 512Mi
+            cpu: 256m
+
+        readinessProbe:
+          httpGet:
+            path: /api/heartbeat
+            port: umamiapp-port
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: umamiapp-secret
+  namespace: umamins
+data:
+  APP_SECRET: MTQ0YTlmZTU0YTJlMGM0YjIyZTYyY2ZhM2JmZTc5NTM2ZDIyNzEyNzQ4NTBhZjBkNzJhNDcxZmY4YzBjMTcxNA==
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: umamiapp-svc
+  namespace: umamins
+spec:
+  type: ClusterIP
+  selector:
+    app: umamiapp
+    env: dev
+  ports:
+  - port: 3000
+    targetPort: umamiapp-port
